@@ -1,0 +1,54 @@
+.data
+prompt: .asciiz "Enter a decimal number: "
+binary_output: .asciiz "The binary number is: "
+
+.text
+.globl _start
+
+_start:
+    # Print prompt to enter a decimal number
+    li $v0, 4
+    la $a0, prompt
+    syscall
+
+    # Read the decimal integer from user input
+    li $v0, 5
+    syscall
+    move $t0, $v0  # $t0 now contains the decimal integer
+
+    # Print "The binary number is: "
+    li $v0, 4
+    la $a0, binary_output
+    syscall
+
+    # Initialize registers
+    li $t1, 1        # Mask to check bits (000...001)
+    li $t2, 32       # Counter for 32 bits (for 32-bit integers)
+
+convert_loop:
+    # Logical shift right and check the least significant bit
+    and $t3, $t0, $t1    # Put the least significant bit in $t3
+    beqz $t3, zero_bit   # Jump to zero_bit if the bit is 0
+    li $a0, '1'          # Load '1' into $a0 for printing
+    j print_char         # Jump to print_char for printing
+
+zero_bit:
+    li $a0, '0'          # Load '0' into $a0 for printing
+
+print_char:
+    li $v0, 11           # Syscall code to print a character
+    syscall
+
+    # Logical shift right for the next bit
+    srl $t0, $t0, 1      # Logical shift right of $t0
+    addi $t2, $t2, -1    # Decrement the bit counter
+    bnez $t2, convert_loop  # Loop if bit counter is not zero
+
+    # Print a newline at the end
+    li $v0, 11
+    li $a0, '\n'
+    syscall
+
+    # Exit the program
+    li $v0, 10           # Syscall code to exit program
+    syscall
